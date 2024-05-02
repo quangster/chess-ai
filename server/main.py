@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_cors import CORS
 import chess
-import random
+from engine import min_maxN
 
 app = Flask(__name__)
 CORS(app)
@@ -11,10 +11,7 @@ CORS(app)
 def best_move():
     fen = request.json['fen']
     board = chess.Board(fen)
-    moves = list(board.legal_moves)
-    randomIndex = random.randint(0, len(moves)-1)
-    best_move = moves[randomIndex]
-    print(best_move)
+    best_move = min_maxN(board, 3)
     return {"best_move": best_move.uci()}
 
 

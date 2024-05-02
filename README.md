@@ -1,3 +1,9 @@
+#### Developed with:
+
+- [React](https://reactjs.org/) - ^18.3.1
+- [Node.js](https://nodejs.org/en/) - 20.12.2
+- [Python](https://www.python.org/) - 3.12.3
+
 Install server dependencies
 ```
 cd server
