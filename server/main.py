@@ -1,7 +1,6 @@
 from flask import Flask, request
 from flask_cors import CORS
-import chess
-from engine import min_maxN
+from engine import Minimax
 
 app = Flask(__name__)
 CORS(app)
@@ -10,8 +9,9 @@ CORS(app)
 @app.route('/best-move', methods=['POST'])
 def best_move():
     fen = request.json['fen']
-    board = chess.Board(fen)
-    best_move = min_maxN(board, 3)
+    print(fen)
+    model = Minimax(fen)
+    best_move = model.get_best_move()
     return {"best_move": best_move.uci()}
 
 

@@ -1,113 +1,124 @@
+from typing import Dict, Any, Optional
 import chess
-import random
-from copy import deepcopy
+import time
 
-import chess.polyglot
-
-
-reader = chess.polyglot.open_reader('engine/baron30.bin')
+from .evaluate import evaluate_board
+from .score import MATE_SCORE, MATE_THRESHOLD
 
 
-def random_agent(board: chess.Board):
-    return random.choice(list[board.legal_moves])
+class Minimax:
+    debug_info: Dict[str, Any] = {}
 
+    def __init__(
+            self,
+            fen: Optional[str] = chess.STARTING_FEN,
+            depth: int = 3,
+            debug=True
+    ) -> None:
+        self.board = chess.Board(fen)
+        self.depth = depth
+        self.debug = debug
 
-scoring = {
-    "p": -1,
-    "n": -3,
-    "b": -3,
-    "r": -5,
-    "q": -9,
-    "k": 0,
-    "P": 1,
-    "N": 3,
-    "B": 3,
-    "R": 5,
-    "Q": 9,
-    "K": 0
-}
+    def get_best_move(self) -> chess.Move:
+        self.debug_info.clear()
+        self.debug_info['depth'] = self.depth
+        self.debug_info['nodes'] = 0
+        start_time = time.time()
+        move = self.minimax()
+        self.debug_info['time'] = time.time() - start_time
+        if self.debug:
+            print(f"INFO: {self.debug_info}")
+        return move
 
-
-def eval_board(board: chess.Board) -> int:
-    score = 0
-    pieces = board.piece_map()
-    for key in pieces:
-        score += scoring[str(pieces[key])]
-    return score
-
-
-def eval_space(board: chess.Board):
-    no_moves = len(list(board.legal_moves))
-    value = (no_moves/(20+no_moves))
-    if board.turn:
-        return value
-    else:
-        return -value
-
-
-def get_best_move_by_minimax(board: chess.Board):
-    print(board.turn)
-    moves = list(board.legal_moves)
-    scores = []
-    for move in moves:
-        temp = deepcopy(board)
-        temp.push(move)
-
-        scores.append(eval_board(temp))
-    if board.turn:
-        best_move = moves[scores.index(max(scores))]
-    else:
-        best_move = moves[scores.index(min(scores))]
-    return best_move
-
-
-def min_max2(board: chess.Board):
-    moves = list(board.legal_moves)
-    scores = []
-    for move in moves:
-        temp = deepcopy(board)
-        temp.push(move)
-
-        temp_best_move = get_best_move_by_minimax(temp)
-        temp.push(temp_best_move)
-        scores.append(eval_board(temp))
-
-    if board.turn:
-        best_move = moves[scores.index(max(scores))]
-    else:
-        best_move = moves[scores.index(min(scores))]
-    return best_move
-
-
-def min_maxN(board: chess.Board, depth):
-    opening_move = reader.get(board)
-    if opening_move:
-        return opening_move.move
-    moves = list(board.legal_moves)
-    scores = []
-    for move in moves:
-        temp = deepcopy(board)
-        temp.push(move)
-
-        outcome = temp.outcome()
-
-        if not outcome:
-            if depth > 1:
-                temp_best_move = min_maxN(temp, depth-1)
-                temp.push(temp_best_move)
-            scores.append(eval_board(temp))
-        elif temp.is_checkmate():
-            return move
-        else:
-            val = 1000
-            if board.turn:
-                scores.append(-val)
+    def minimax(self) -> chess.Move:
+        maximize = self.board.turn == chess.WHITE
+        best_move_score = -float('inf')
+        if not maximize:
+            best_move_score = float('inf')
+        moves = list(self.board.legal_moves)
+        best_move_found = moves[0]
+        for move in moves:
+            self.board.push(move)
+            if self.board.can_claim_draw():
+                value = 0.0
             else:
-                scores.append(val)
-        scores[-1] = scores[-1] + eval_space(temp)
+                value = self._minimax(
+                    self.board,
+                    self.depth-1,
+                    -float('inf'),
+                    float('inf'),
+                    not maximize
+                )
+            self.board.pop()
+            if maximize and value >= best_move_score:
+                best_move_score = value
+                best_move_found = move
+            elif not maximize and value <= best_move_score:
+                best_move_score = value
+                best_move_found = move
+        return best_move_found
 
-    if board.turn:
-        best_move = moves[scores.index(max(scores))]
-    else:
-        best_move = moves[scores.index(min(scores))]
-    return best_move
+    def _minimax(
+            self,
+            board: chess.Board,
+            depth: int,
+            alpha: float,
+            beta: float,
+            is_maximize_player: bool
+    ) -> float:
+        """
+        Minimax logic
+        """
+        self.debug_info['nodes'] += 1
+        if board.is_checkmate():
+            return -MATE_SCORE if is_maximize_player else MATE_SCORE
+        elif board.is_game_over():
+            return 0
+
+        if depth == 0:
+            return evaluate_board(board)
+
+        if is_maximize_player:
+            best_move_score = -float('inf')
+            moves = list(board.legal_moves)
+            for move in moves:
+                board.push(move)
+                curr_move_score = self._minimax(
+                    board,
+                    depth-1,
+                    alpha,
+                    beta,
+                    not is_maximize_player
+                )
+                if curr_move_score > MATE_THRESHOLD:
+                    curr_move_score -= 1
+                elif curr_move_score < -MATE_THRESHOLD:
+                    curr_move_score += 1
+                best_move_score = max(best_move_score, curr_move_score)
+                board.pop()
+                alpha = max(alpha, best_move_score)
+                if beta <= alpha:
+                    return best_move_score
+            return best_move_score
+        else:
+            best_move_score = float('inf')
+            moves = list(board.legal_moves)
+            for move in moves:
+                board.push(move)
+                curr_move_score = self._minimax(
+                    board,
+                    depth-1,
+                    alpha,
+                    beta,
+                    not is_maximize_player
+                )
+                if curr_move_score > MATE_THRESHOLD:
+                    curr_move_score -= 1
+                elif curr_move_score < -MATE_THRESHOLD:
+                    curr_move_score += 1
+                best_move_score = min(best_move_score, curr_move_score)
+                board.pop()
+                beta = min(beta, best_move_score)
+                if beta <= alpha:
+                    return best_move_score
+            return best_move_score
