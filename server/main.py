@@ -12,6 +12,7 @@ def best_move():
     print(fen)
     model = Minimax(fen)
     best_move = model.get_best_move()
+    print("Hello world")
     return {"best_move": best_move.uci()}
 
 

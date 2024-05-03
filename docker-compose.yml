@@ -1,0 +1,29 @@
+services:
+  server:
+    build: ./server
+    image: chess-server
+    container_name: chess-server
+    volumes:
+      - ./server:/app
+    ports:
+      - 5000:5000
+    networks:
+      - chess_network
+  
+  client:
+    build: ./client
+    image: chess-client
+    container_name: chess-client
+    volumes:
+      - ./client:/app
+    ports:
+      - 3000:3000
+    depends_on:
+      - server
+    networks:
+      - chess_network
+
+networks:
+  chess_network:
+    name: chess_network
+    driver: bridge
