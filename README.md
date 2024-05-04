@@ -11,9 +11,9 @@ docker -v
 ```
 => Docker version 26.0.0, build 2ae903e
 ```bash
-docker-composer --version
+docker-compose -v
 ```
-=> docker-compose version 1.29.2, build 5becea4c
+=> Docker Compose version v2.27.0
 
 
 ### Build the images and run the containers:
