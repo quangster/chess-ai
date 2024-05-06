@@ -1,5 +1,5 @@
 import ChessBoard from "./component/Main";
-import Header from "./component/header/header";
+import Header from "./component/header/Header";
 
 function App() {
   return (

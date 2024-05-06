@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Webkit-based browsers (Chrome, Safari, Opera) */
+.custom-scrollbar::-webkit-scrollbar {
+    @apply w-2 h-2; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-700; 
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-[#252622]; 
+}

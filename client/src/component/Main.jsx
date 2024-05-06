@@ -2,8 +2,12 @@ import { useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
-const ControlPanel = ({resetBoard,undoBoard}) => {
+const ControlPanel = ({resetBoard,undoBoard, DisplayHistory}) => {
+
     return <div className="relative flex justify-center  h-[500px] bg-[#252622] rounded-md">
+                <div className="mt-4 h-[400px] w-[350px] mx-2 overflow-x-hidden overflow-y-auto custom-scrollbar ">
+                    <DisplayHistory/>
+                </div>
                 <div className="absolute bottom-4 grid grid-cols-[100px_100px_100px] gap-2">
                     <div id="reset_btn" onClick={resetBoard} className="bg-[#302E2B] hover:bg-[#423f3b] flex justify-center items-center py-2 rounded">
                         <svg width="35px" height="35px" viewBox="-2 -2 24.00 24.00" xmlns="http://www.w3.org/2000/svg" fill="#302E2B" stroke="#302E2B" stroke-width="0.48" transform="rotate(0)matrix(1, 0, 0, 1, 0, 0)"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="0.04"></g><g id="SVGRepo_iconCarrier"><path d="M17 9a1 1 0 01-1-1c0-.551-.448-1-1-1H5.414l1.293 1.293a.999.999 0 11-1.414 1.414l-3-3a.999.999 0 010-1.414l3-3a.997.997 0 011.414 0 .999.999 0 010 1.414L5.414 5H15c1.654 0 3 1.346 3 3a1 1 0 01-1 1zM3 11a1 1 0 011 1c0 .551.448 1 1 1h9.586l-1.293-1.293a.999.999 0 111.414-1.414l3 3a.999.999 0 010 1.414l-3 3a.999.999 0 11-1.414-1.414L14.586 15H5c-1.654 0-3-1.346-3-3a1 1 0 011-1z" fill="#c4c4c4"></path></g></svg>
@@ -27,20 +31,24 @@ export default function ChessBoard() {
         setGame(new Chess())
     }
 
-    const undoBoard = () => {
-        const gameCopy = new Chess(game.fen()); 
-        gameCopy.undo(); 
-        setGame(new Chess(gameCopy.fen())); 
+    const updateBoard = () => {
+        const newGame = new Chess();
+        game.history().forEach(move => newGame.move(move));
+        setGame(newGame)
+        console.log(game.history())
     }
-    
+
+    const undoBoard = () => {
+        game.undo()
+        game.undo()
+        updateBoard()
+    }
     
     const makeAMove = (move) => {
         try {
-            const gameCopy = new Chess(game.fen())
-            const result = gameCopy.move(move);
+            const result = game.move(move);
             if (result) {
-                game.move(move)
-                setGame(gameCopy);
+                updateBoard()
             }
             return result;
         } catch (error) {
@@ -48,7 +56,6 @@ export default function ChessBoard() {
         }
     };
 
-  // Function to handle the beginning of a drag event on a piece
     const onDragBegin = (piece, sourceSquare) => {
         const moves = game.moves({ square: sourceSquare, verbose: true });
         const newSquareStyles = moves.reduce((styles, move) => {
@@ -58,22 +65,50 @@ export default function ChessBoard() {
         setCustomSquareStyles(newSquareStyles);
     };
 
-    // Function to reset custom square styles when dragging ends
     const onDragEnd = () => {
         setCustomSquareStyles({});
     };
 
-    // Function to handle the drop of a piece
+    const DisplayHistory = () => {
+        const chunkedHistory = [];
+        const history = game.history()
+        for (let i = 0; i < history.length; i += 2) {
+            chunkedHistory.push(history.slice(i, i + 2));
+        }
+
+        return (
+            <div>
+                <h3 className="text-[#929292] mb-2">History</h3>
+                {chunkedHistory.map((chunk, index) => (
+                    index % 2 === 0 ? (
+                        <div className="grid grid-cols-[30px_60px_60px] py-1">
+                            <span className="text-[#929292]">{index + 1}.</span>
+                            {chunk.map((move, i) => (
+                                <span className="font-semibold text-[#d6d5d5]">{move} </span>
+                            ))}
+                        </div>
+                    ) : (  
+                        <div className="grid grid-cols-[30px_60px_60px] py-1 px-2 bg-[#282724] mx-[-8px]">
+                            <span className="text-[#929292]">{index + 1}.</span>
+                            {chunk.map((move, i) => (
+                                <span className="font-semibold text-[#d6d5d5]">{move} </span>
+                            ))}
+                        </div>
+                    )
+                ))}
+            </div>
+        );
+    } 
+
     const onDrop = async (sourceSquare, targetSquare, piece) => {
         const move = makeAMove({
             from: sourceSquare,
             to: targetSquare,
-            promotion: "q" // Always promote to a queen for simplicity
+            promotion: "q" 
         });
 
         if (!move) return false;
 
-        // Fetch the best move from an external API
         try {
             const response = await fetch('http://localhost:5000/best-move', {
                 method: 'POST',
@@ -85,13 +120,15 @@ export default function ChessBoard() {
 
             const data = await response.json();
             game.move(data.best_move);
-            setGame(new Chess(game.fen()));
+            updateBoard()
         } catch (error) {
             console.error("Failed to fetch the best move:", error);
         }
 
         return true;
     };
+
+
 
     return (
         <div className="grid grid-cols-[500px_350px] gap-10 w-fit ">
@@ -107,7 +144,8 @@ export default function ChessBoard() {
                     boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
                 }}
             />
-            <ControlPanel resetBoard={resetBoard} undoBoard={undoBoard}/>
-        </div>
+            <ControlPanel resetBoard={resetBoard} undoBoard={undoBoard} DisplayHistory={DisplayHistory}/>
+            
+        </div>      
     );
     }
