@@ -9,10 +9,8 @@ CORS(app)
 @app.route('/best-move', methods=['POST'])
 def best_move():
     fen = request.json['fen']
-    print(fen)
-    model = Minimax(fen)
+    model = Minimax(fen, depth=3)
     best_move = model.get_best_move()
-    print("Hello world")
     return {"best_move": best_move.uci()}
 
 

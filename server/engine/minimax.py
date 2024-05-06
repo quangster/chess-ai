@@ -1,6 +1,8 @@
 from typing import Dict, Any, Optional
 import chess
+import chess.polyglot
 import time
+import os
 
 from .evaluate import evaluate_board
 from .score import MATE_SCORE, MATE_THRESHOLD
@@ -8,12 +10,13 @@ from .score import MATE_SCORE, MATE_THRESHOLD
 
 class Minimax:
     debug_info: Dict[str, Any] = {}
+    open_reader = chess.polyglot.open_reader(os.path.join('open', 'Human.bin'))
 
     def __init__(
-            self,
-            fen: Optional[str] = chess.STARTING_FEN,
-            depth: int = 3,
-            debug=True
+        self,
+        fen: Optional[str] = chess.STARTING_FEN,
+        depth: int = 3,
+        debug=True
     ) -> None:
         self.board = chess.Board(fen)
         self.depth = depth
@@ -31,6 +34,9 @@ class Minimax:
         return move
 
     def minimax(self) -> chess.Move:
+        opening_move = self.open_reader.get(self.board)
+        if opening_move:
+            return opening_move.move
         maximize = self.board.turn == chess.WHITE
         best_move_score = -float('inf')
         if not maximize:
@@ -42,7 +48,7 @@ class Minimax:
             if self.board.can_claim_draw():
                 value = 0.0
             else:
-                value = self._minimax(
+                value = self._minimax_with_alpha_beta(
                     self.board,
                     self.depth-1,
                     -float('inf'),
@@ -59,12 +65,62 @@ class Minimax:
         return best_move_found
 
     def _minimax(
-            self,
-            board: chess.Board,
-            depth: int,
-            alpha: float,
-            beta: float,
-            is_maximize_player: bool
+        self,
+        board: chess.Board,
+        depth: int,
+        is_maximize_player: bool
+    ) -> float:
+        self.debug_info['nodes'] += 1
+        if board.is_checkmate():
+            return -MATE_SCORE if is_maximize_player else MATE_SCORE
+        elif board.is_game_over():
+            return 0
+
+        if depth == 0:
+            return evaluate_board(board)
+
+        if is_maximize_player:
+            best_move_score = -float('inf')
+            moves = list(board.legal_moves)
+            for move in moves:
+                board.push(move)
+                curr_move_score = self._minimax(
+                    board,
+                    depth-1,
+                    not is_maximize_player
+                )
+                if curr_move_score > MATE_THRESHOLD:
+                    curr_move_score -= 1
+                elif curr_move_score < -MATE_THRESHOLD:
+                    curr_move_score += 1
+                best_move_score = max(best_move_score, curr_move_score)
+                board.pop()
+            return best_move_score
+        else:
+            best_move_score = float('inf')
+            moves = list(board.legal_moves)
+            for move in moves:
+                board.push(move)
+                curr_move_score = self._minimax(
+                    board,
+                    depth-1,
+                    not is_maximize_player
+                )
+                if curr_move_score > MATE_THRESHOLD:
+                    curr_move_score -= 1
+                elif curr_move_score < -MATE_THRESHOLD:
+                    curr_move_score += 1
+                best_move_score = min(best_move_score, curr_move_score)
+                board.pop()
+            return best_move_score
+
+    def _minimax_with_alpha_beta(
+        self,
+        board: chess.Board,
+        depth: int,
+        alpha: float,
+        beta: float,
+        is_maximize_player: bool
     ) -> float:
         """
         Minimax logic
@@ -83,7 +139,7 @@ class Minimax:
             moves = list(board.legal_moves)
             for move in moves:
                 board.push(move)
-                curr_move_score = self._minimax(
+                curr_move_score = self._minimax_with_alpha_beta(
                     board,
                     depth-1,
                     alpha,
@@ -105,7 +161,7 @@ class Minimax:
             moves = list(board.legal_moves)
             for move in moves:
                 board.push(move)
-                curr_move_score = self._minimax(
+                curr_move_score = self._minimax_with_alpha_beta(
                     board,
                     depth-1,
                     alpha,
