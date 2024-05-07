@@ -110,7 +110,7 @@ export default function ChessBoard() {
         if (!move) return false;
 
         try {
-            const response = await fetch('http://localhost:5000/best-move', {
+            const response = await fetch('http://localhost:5000/alphabeta', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fen: game.fen() })
