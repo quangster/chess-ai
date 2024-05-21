@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
+import alphabeta from "./img/alphabeta.png"
+import minimax from "./img/minimax.png"
 
 const ControlPanel = ({resetBoard,undoBoard, DisplayHistory}) => {
 
-    return <div className="relative flex justify-center  h-[500px] bg-[#252622] rounded-md">
-                <div className="mt-4 h-[400px] w-[350px] mx-2 overflow-x-hidden overflow-y-auto custom-scrollbar ">
+    return <div className="relative flex justify-center h-[570px] bg-[#252622] rounded-md">
+                <div className="mt-5 h-[400px] w-[350px] mx-2 overflow-x-hidden overflow-y-auto custom-scrollbar ">
                     <DisplayHistory/>
                 </div>
                 <div className="absolute bottom-4 grid grid-cols-[100px_100px_100px] gap-2">
@@ -25,6 +27,9 @@ const ControlPanel = ({resetBoard,undoBoard, DisplayHistory}) => {
 export default function ChessBoard() {
     const [game, setGame] = useState(new Chess());
     const [customSquareStyles, setCustomSquareStyles] = useState({})
+    let url_fetch  = 'http://localhost:5000/alphabeta'
+    const [visibleAlpha, setVisibleAlpha] = useState(true)
+    const [visibleMinimax, setVisibleMinimax] = useState(false)
 
     const resetBoard = () => {
         console.log("clicked")
@@ -56,7 +61,18 @@ export default function ChessBoard() {
       
         return false;
     };
-      
+    
+    const HideAlpha = () => {
+        setVisibleAlpha(false)
+        setVisibleMinimax(true)
+        url_fetch = 'http://localhost:5000/minimax'
+    }
+
+    const HideMinimax = () => {
+        setVisibleAlpha(true)
+        setVisibleMinimax(false)
+        url_fetch = 'http://localhost:5000/alphabeta'
+    }
 
     const onDragBegin = (piece, sourceSquare) => {
         const moves = game.moves({ square: sourceSquare, verbose: true });
@@ -112,7 +128,7 @@ export default function ChessBoard() {
         if (!move) return false;
         
         try {
-            const response = await fetch('http://localhost:5000/alphabeta', {
+            const response = await fetch(url_fetch, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fen: game.fen() })
@@ -134,18 +150,34 @@ export default function ChessBoard() {
 
     return (
         <div className="grid grid-cols-[500px_350px] gap-10 w-fit ">
-            <Chessboard
-                position={game.fen()}
-                onPieceDrop={onDrop}
-                boardWidth={500}
-                onPieceDragBegin={onDragBegin}
-                onPieceDragEnd={onDragEnd}
-                customSquareStyles={customSquareStyles}
-                customBoardStyle={{
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
-                }}
-            />
+            <div>
+                <div>
+                    {visibleAlpha && (
+                        <div className="h-10 mb-5">
+                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideAlpha} src={alphabeta}/>
+                            <p className="float-left text-white ml-2 text-lg">alphabeta</p>
+                        </div>
+                    )}
+                    {visibleMinimax && (
+                        <div className="h-10 mb-5">
+                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMinimax} src={minimax}/>
+                            <p className="float-left text-white ml-2 text-lg">minimax</p>
+                        </div>
+                    )}
+                </div>
+                <Chessboard
+                    position={game.fen()}
+                    onPieceDrop={onDrop}
+                    boardWidth={500}
+                    onPieceDragBegin={onDragBegin}
+                    onPieceDragEnd={onDragEnd}
+                    customSquareStyles={customSquareStyles}
+                    customBoardStyle={{
+                        borderRadius: "4px",
+                        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
+                    }}
+                />
+            </div>
             <ControlPanel resetBoard={resetBoard} undoBoard={undoBoard} DisplayHistory={DisplayHistory}/>
             
         </div>      
