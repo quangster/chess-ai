@@ -27,9 +27,10 @@ const ControlPanel = ({resetBoard,undoBoard, DisplayHistory}) => {
 export default function ChessBoard() {
     const [game, setGame] = useState(new Chess());
     const [customSquareStyles, setCustomSquareStyles] = useState({})
-    let url_fetch  = 'http://localhost:5000/alphabeta'
-    const [visibleAlpha, setVisibleAlpha] = useState(true)
-    const [visibleMinimax, setVisibleMinimax] = useState(false)
+    const [visibleAlpha, setVisibleAlpha] = useState(false)
+    const [visibleMinimax, setVisibleMinimax] = useState(true)
+    const [visibleMCTS, setVisibleMCTS] = useState(false)
+    const [api, setAPI] = useState("http://localhost:5000/minimax")
 
     const resetBoard = () => {
         console.log("clicked")
@@ -63,15 +64,24 @@ export default function ChessBoard() {
     };
     
     const HideAlpha = () => {
+        setVisibleMinimax(false)
         setVisibleAlpha(false)
-        setVisibleMinimax(true)
-        url_fetch = 'http://localhost:5000/minimax'
+        setVisibleMCTS(true)
+        setAPI("http://localhost:5000/mcts")
     }
 
     const HideMinimax = () => {
-        setVisibleAlpha(true)
         setVisibleMinimax(false)
-        url_fetch = 'http://localhost:5000/alphabeta'
+        setVisibleAlpha(true)
+        setVisibleMCTS(false)
+        setAPI("http://localhost:5000/alphabeta")
+    }
+
+    const HideMCTS = () => {
+        setVisibleMinimax(true)
+        setVisibleAlpha(false)
+        setVisibleMCTS(false)
+        setAPI("http://localhost:5000/minimax")
     }
 
     const onDragBegin = (piece, sourceSquare) => {
@@ -128,7 +138,7 @@ export default function ChessBoard() {
         if (!move) return false;
         
         try {
-            const response = await fetch(url_fetch, {
+            const response = await fetch(api, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fen: game.fen() })
@@ -162,6 +172,12 @@ export default function ChessBoard() {
                         <div className="h-10 mb-5">
                             <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMinimax} src={minimax}/>
                             <p className="float-left text-white ml-2 text-lg">minimax</p>
+                        </div>
+                    )}
+                    {visibleMCTS && (
+                        <div className="h-10 mb-5">
+                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMCTS} src={minimax}/>
+                            <p className="float-left text-white ml-2 text-lg">monte carlo tree search</p>
                         </div>
                     )}
                 </div>

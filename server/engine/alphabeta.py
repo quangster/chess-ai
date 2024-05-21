@@ -1,10 +1,10 @@
 import chess
-from typing import Optional
+from typing import Optional, List
 import os
 import chess.polyglot
 
 from .base import Engine
-from .evaluate import evaluate_board
+from .evaluate import evaluate_board, get_ordered_moves
 from .score import MATE_SCORE, MATE_THRESHOLD
 
 
@@ -20,6 +20,10 @@ class AlphaBeta(Engine):
         super().__init__(fen, debug)
         self.depth = depth
 
+    def get_order_moves(self, board: chess.Board) -> List[chess.Move]:
+        return get_ordered_moves(board)
+        return list(board.legal_moves)
+
     def get_best_move(self) -> chess.Move:
         self.debug_info['depth'] = self.depth
         self.debug_info['nodes'] = 0
@@ -30,7 +34,7 @@ class AlphaBeta(Engine):
         best_move_score = -float('inf')
         if not maximize:
             best_move_score = float('inf')
-        moves = list(self.board.legal_moves)
+        moves = self.get_order_moves(self.board)
         best_move_found = moves[0]
         for move in moves:
             self.board.push(move)
@@ -72,7 +76,7 @@ class AlphaBeta(Engine):
 
         if is_maximize_player:
             best_move_score = -float('inf')
-            moves = list(board.legal_moves)
+            moves = self.get_order_moves(board)
             for move in moves:
                 board.push(move)
                 curr_move_score = self._alphabeta(
@@ -94,7 +98,7 @@ class AlphaBeta(Engine):
             return best_move_score
         else:
             best_move_score = float('inf')
-            moves = list(board.legal_moves)
+            moves = self.get_order_moves(board)
             for move in moves:
                 board.push(move)
                 curr_move_score = self._alphabeta(

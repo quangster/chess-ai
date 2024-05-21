@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import chess
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 import chess.polyglot
 
@@ -25,6 +25,13 @@ class Engine(ABC):
         if self.debug:
             print(f"INFO: {self.debug_info}")
         return move
+
+    def get_debug_info(self):
+        return self.debug_info
+
+    @abstractmethod
+    def get_order_moves(self, board: chess.Board) -> List[chess.Move]:
+        pass
 
     @abstractmethod
     def get_best_move(self) -> chess.Move:
