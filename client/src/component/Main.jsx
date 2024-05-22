@@ -3,6 +3,10 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import alphabeta from "./img/alphabeta.png"
 import minimax from "./img/minimax.png"
+import monte_carlo from './img/monte_carlo.png'
+import { CSSTransition } from 'react-transition-group';
+
+
 
 const ControlPanel = ({resetBoard,undoBoard, DisplayHistory}) => {
 
@@ -64,24 +68,30 @@ export default function ChessBoard() {
     };
     
     const HideAlpha = () => {
-        setVisibleMinimax(false)
-        setVisibleAlpha(false)
-        setVisibleMCTS(true)
-        setAPI("http://localhost:5000/mcts")
+        setTimeout(() => {
+            setVisibleMinimax(false);
+            setVisibleAlpha(false);
+            setVisibleMCTS(true);
+            setAPI("http://localhost:5000/mcts");
+        }, 100); // delay to allow transition to play
     }
-
+    
     const HideMinimax = () => {
-        setVisibleMinimax(false)
-        setVisibleAlpha(true)
-        setVisibleMCTS(false)
-        setAPI("http://localhost:5000/alphabeta")
+        setTimeout(() => {
+            setVisibleMinimax(false);
+            setVisibleAlpha(true);
+            setVisibleMCTS(false);
+            setAPI("http://localhost:5000/alphabeta");
+        }, 100); // delay to allow transition to play
     }
-
+    
     const HideMCTS = () => {
-        setVisibleMinimax(true)
-        setVisibleAlpha(false)
-        setVisibleMCTS(false)
-        setAPI("http://localhost:5000/minimax")
+        setTimeout(() => {
+            setVisibleMinimax(true);
+            setVisibleAlpha(false);
+            setVisibleMCTS(false);
+            setAPI("http://localhost:5000/minimax");
+        }, 100); // delay to allow transition to play
     }
 
     const onDragBegin = (piece, sourceSquare) => {
@@ -163,20 +173,38 @@ export default function ChessBoard() {
             <div>
                 <div>
                     {visibleAlpha && (
-                        <div className="h-10 mb-5">
+                        <div className="h-10 mb-5 fade-transition visible">
+                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideAlpha} src={alphabeta}/>
+                            <p className="float-left text-white ml-2 text-lg">alphabeta</p>
+                        </div>
+                    )}
+                    {!visibleAlpha && (
+                        <div className="h-10 mb-5 fade-transition hidden">
                             <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideAlpha} src={alphabeta}/>
                             <p className="float-left text-white ml-2 text-lg">alphabeta</p>
                         </div>
                     )}
                     {visibleMinimax && (
-                        <div className="h-10 mb-5">
+                        <div className="h-10 mb-5 fade-transition visible">
+                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMinimax} src={minimax}/>
+                            <p className="float-left text-white ml-2 text-lg">minimax</p>
+                        </div>
+                    )}
+                    {!visibleMinimax && (
+                        <div className="h-10 mb-5 fade-transition hidden">
                             <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMinimax} src={minimax}/>
                             <p className="float-left text-white ml-2 text-lg">minimax</p>
                         </div>
                     )}
                     {visibleMCTS && (
-                        <div className="h-10 mb-5">
-                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMCTS} src={minimax}/>
+                        <div className="h-10 mb-5 fade-transition visible">
+                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMCTS} src={monte_carlo}/>
+                            <p className="float-left text-white ml-2 text-lg">monte carlo tree search</p>
+                        </div>
+                    )}
+                    {!visibleMCTS && (
+                        <div className="h-10 mb-5 fade-transition hidden">
+                            <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMCTS} src={monte_carlo}/>
                             <p className="float-left text-white ml-2 text-lg">monte carlo tree search</p>
                         </div>
                     )}
