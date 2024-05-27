@@ -35,10 +35,13 @@ export default function ChessBoard() {
     const [visibleMinimax, setVisibleMinimax] = useState(true)
     const [visibleMCTS, setVisibleMCTS] = useState(false)
     const [api, setAPI] = useState("http://localhost:5000/minimax")
+    const [info, setInfo] = useState({'time': 0, 'depth':0, 'nodes':0})
+
 
     const resetBoard = () => {
         console.log("clicked")
         setGame(new Chess())
+        setInfo({'time': 0, 'depth':0, 'nodes':0})
     }
 
     const updateBoard = () => {
@@ -52,6 +55,7 @@ export default function ChessBoard() {
         game.undo()
         game.undo()
         updateBoard()
+        setInfo({'time': 0, 'depth':0, 'nodes':0})
     }
     
     const makeAMove = (move) => {
@@ -116,7 +120,7 @@ export default function ChessBoard() {
 
         return (
             <div>
-                <h3 className="text-[#929292] mb-2">History</h3>
+                <h3 className="text-[#929292] mb-2 font-bold">History</h3>
                 {chunkedHistory.map((chunk, index) => (
                     index % 2 === 0 ? (
                         <div className="grid grid-cols-[30px_60px_60px] py-1">
@@ -158,6 +162,7 @@ export default function ChessBoard() {
 
             const data = await response.json();
             game.move(data.best_move);
+            setInfo(data.info)
             updateBoard()
         } catch (error) {
             console.error("Failed to fetch the best move:", error);
@@ -167,15 +172,25 @@ export default function ChessBoard() {
     };
 
 
-
     return (
-        <div className="grid grid-cols-[500px_350px] gap-10 w-fit ">
+        <div className="grid grid-cols-[500px_350px] gap-10 w-fit">
             <div>
                 <div>
                     {visibleAlpha && (
-                        <div className="h-10 mb-5 fade-transition visible">
+                        <div className="relative h-10 mb-5 fade-transition visible">
                             <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideAlpha} src={alphabeta}/>
-                            <p className="float-left text-white ml-2 text-lg">alphabeta</p>
+                            <div className="float-left text-white ml-2 text-lg mt-[-8px]">
+                                <p className="mb-[-4px]">alphabeta</p>
+                                <p>{info.time}s</p>
+                            </div> 
+                            <div className="absolute top-[-9px] right-0 w-32 text-white text-lg">
+                                <p className="mb-[-4px]">
+                                    Depth : {info.depth}
+                                </p>
+                                <p>
+                                    Nodes : {info.nodes}
+                                </p>
+                            </div>
                         </div>
                     )}
                     {!visibleAlpha && (
@@ -185,9 +200,20 @@ export default function ChessBoard() {
                         </div>
                     )}
                     {visibleMinimax && (
-                        <div className="h-10 mb-5 fade-transition visible">
+                        <div className="relative  h-10 mb-5 fade-transition visible">
                             <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMinimax} src={minimax}/>
-                            <p className="float-left text-white ml-2 text-lg">minimax</p>
+                            <div className="float-left text-white ml-2 text-lg mt-[-8px]">
+                                <p className="mb-[-4px]">minimax</p>
+                                <p>{info.time}s</p>
+                            </div> 
+                            <div className="absolute top-[-9px] right-0 w-32 text-white text-lg">
+                                <p className="mb-[-4px]">
+                                    Depth : {info.depth}
+                                </p>
+                                <p>
+                                    Nodes : {info.nodes}
+                                </p>
+                            </div>
                         </div>
                     )}
                     {!visibleMinimax && (
@@ -197,15 +223,26 @@ export default function ChessBoard() {
                         </div>
                     )}
                     {visibleMCTS && (
-                        <div className="h-10 mb-5 fade-transition visible">
+                        <div className="relative h-10 mb-5 fade-transition visible">
                             <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMCTS} src={monte_carlo}/>
-                            <p className="float-left text-white ml-2 text-lg">monte carlo tree search</p>
+                            <div className="float-left text-white ml-2 text-lg mt-[-8px]">
+                                <p className="mb-[-4px]">monte carlo</p>
+                                <p>{info.time}s</p>
+                            </div> 
+                            <div className="absolute top-[-9px] right-0 w-32 text-white text-lg">
+                                <p className="mb-[-4px]">
+                                    Depth : {info.depth}
+                                </p>
+                                <p>
+                                    Nodes : {info.nodes}
+                                </p>
+                            </div>
                         </div>
                     )}
                     {!visibleMCTS && (
                         <div className="h-10 mb-5 fade-transition hidden">
                             <img id="alphabeta_icon" className="h-10 rounded-md float-left" onClick={HideMCTS} src={monte_carlo}/>
-                            <p className="float-left text-white ml-2 text-lg">monte carlo tree search</p>
+                            <p className="float-left text-white ml-2 text-lg">monte carlo</p>
                         </div>
                     )}
                 </div>

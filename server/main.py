@@ -23,6 +23,7 @@ def get_move_by_alphabeta():
     model = AlphaBeta(fen, depth=depth)
     best_move = model.play()
     info = model.get_debug_info()
+    info['time'] = round(info['time'], 6)
     return {
         "best_move": best_move.uci(),
         "info": info
@@ -39,6 +40,7 @@ def get_move_by_minimax():
     model = Minimax(fen, depth=depth)
     best_move = model.play()
     info = model.get_debug_info()
+    info['time'] = round(info['time'], 6)
     return {
         "best_move": best_move.uci(),
         "info": info
@@ -59,6 +61,7 @@ def get_move_by_mcts():
     model = MonteCarloTreeSearch(fen, C, simulations)
     best_move = model.play()
     info = model.get_debug_info()
+    info['time'] = round(info['time'], 6)
     return {"best_move": best_move.uci(), "info": info}
 
 
