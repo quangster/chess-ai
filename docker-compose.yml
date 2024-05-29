@@ -3,8 +3,6 @@ services:
     build: ./server
     image: chess-server
     container_name: chess-server
-    volumes:
-      - ./server:/app
     ports:
       - 5000:5000
     networks:
@@ -14,11 +12,8 @@ services:
     build: ./client
     image: chess-client
     container_name: chess-client
-    volumes:
-      - ./client:/app
-      - /app/node_modules
     ports:
-      - 3000:3000
+      - 3000:80
     depends_on:
       - server
     networks:
